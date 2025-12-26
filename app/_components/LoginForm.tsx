@@ -22,50 +22,93 @@ export default function LoginForm() {
 
   const submit = async (values: LoginData) => {
     startTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Uncomment to navigate after login
-      // router.push("/");
+      // Example API call
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (res.ok) {
+        router.push("/");
+      } else {
+        console.error("Login failed");
+      }
     });
-    console.log("login", values);
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)}>
+    <form
+      onSubmit={handleSubmit(submit)}
+      className="space-y-5"
+    >
       {/* Email */}
       <div>
-        <label htmlFor="email">Email</label>
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Email
+        </label>
         <input
           id="email"
           type="email"
           autoComplete="email"
-          {...register("email")}
           placeholder="you@example.com"
+          {...register("email")}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
         />
-        {errors.email?.message && <p>{errors.email.message}</p>}
+        {errors.email?.message && (
+          <p className="mt-1 text-xs text-red-500">
+            {errors.email.message}
+          </p>
+        )}
       </div>
 
       {/* Password */}
       <div>
-        <label htmlFor="password">Password</label>
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Password
+        </label>
         <input
           id="password"
           type="password"
           autoComplete="current-password"
+          placeholder="••••••••"
           {...register("password")}
-          placeholder="••••••"
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
         />
-        {errors.password?.message && <p>{errors.password.message}</p>}
+        {errors.password?.message && (
+          <p className="mt-1 text-xs text-red-500">
+            {errors.password.message}
+          </p>
+        )}
       </div>
 
       {/* Submit */}
-      <button type="submit" disabled={isSubmitting || pending}>
+      <button
+        type="submit"
+        disabled={isSubmitting || pending}
+        className="w-full rounded-lg bg-black py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+      >
         {isSubmitting || pending ? "Logging in..." : "Log in"}
       </button>
 
       {/* Footer */}
-      <div>
-        Don't have an account? <Link href="/register">Sign up</Link>
-      </div>
+      <p className="text-center text-sm text-gray-600">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/register"
+          className="font-medium text-black hover:underline"
+        >
+          Sign up
+        </Link>
+      </p>
     </form>
   );
 }
