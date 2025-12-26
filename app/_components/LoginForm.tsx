@@ -20,12 +20,13 @@ export default function LoginForm() {
   });
 
   const submit = async (values: LoginData) => {
-    console.log("login", values);
+  console.log("login", values);
 
-    startTransition(() => {
-      router.push("/");
-    });
-  };
+  startTransition(() => {
+    router.push("/auth/dashboard");
+  });
+};
+
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
