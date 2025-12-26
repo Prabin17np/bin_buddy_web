@@ -17,95 +17,45 @@ export default function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    mode: "onSubmit",
   });
 
   const submit = async (values: LoginData) => {
-    startTransition(async () => {
-      // Example API call
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
+    console.log("login", values);
 
-      if (res.ok) {
-        router.push("/");
-      } else {
-        console.error("Login failed");
-      }
+    startTransition(() => {
+      router.push("/");
     });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(submit)}
-      className="space-y-5"
-    >
-      {/* Email */}
-      <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          {...register("email")}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-        {errors.email?.message && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
+    <form onSubmit={handleSubmit(submit)} className="space-y-5">
+      <input
+        type="email"
+        placeholder="Email"
+        {...register("email")}
+        className="w-full rounded-lg border px-3 py-3 text-black"
+      />
+      {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
 
-      {/* Password */}
-      <div>
-        <label
-          htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          {...register("password")}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-        {errors.password?.message && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.password.message}
-          </p>
-        )}
-      </div>
+      <input
+        type="password"
+        placeholder="Password"
+        {...register("password")}
+        className="w-full rounded-lg border px-3 py-3 text-black"
+      />
+      {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
 
-      {/* Submit */}
       <button
         type="submit"
-        disabled={isSubmitting || pending}
-        className="w-full rounded-lg bg-black py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={pending || isSubmitting}
+        className="w-full rounded-lg bg-black py-2.5 text-white"
       >
-        {isSubmitting || pending ? "Logging in..." : "Log in"}
+        {pending ? "Logging in..." : "Log in"}
       </button>
 
-      {/* Footer */}
-      <p className="text-center text-sm text-gray-600">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="font-medium text-black hover:underline"
-        >
+      <p className="text-center text-sm text-black">
+        Don't have an account?{" "}
+        <Link href="/register" className="font-medium text-black hover:underline">
           Sign up
         </Link>
       </p>
