@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import DashboardCard from "@/app/_components/DashboardCard";
+import DashboardCard from "../_components/DashboardCard";
 
 export default function DashboardPage() {
   return (

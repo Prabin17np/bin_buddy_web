@@ -1,3 +1,4 @@
+"use client";
 type Props = {
   title: string;
   value: string;

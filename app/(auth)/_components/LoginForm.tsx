@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LoginData, loginSchema } from "../schema";
+import { LoginData, loginSchema } from "../../schema";
 import { handleLogin } from "@/lib/action/auth-action";
 import toast from "react-hot-toast";
 
@@ -32,7 +32,7 @@ export default function LoginForm() {
       toast.success("Login success");
 
       startTransition(() => {
-        router.push("/auth/dashboard");
+        router.push("/(auth)/dashboard");
       });
     } catch (error: Error | any) {
       setError(error.message || "Login Failed");
