@@ -1,6 +1,6 @@
 "use client";
 
-import LoginForm from "../_components/LoginForm";
+import RegisterForm from "@/app/_components/RegisterForm";
 
 export default function Page() {
   return (
@@ -8,14 +8,14 @@ export default function Page() {
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back
+            Create an account
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Log in to your account
+            Sign up to get started
           </p>
         </div>
 
-        <LoginForm />
+        <RegisterForm />
       </div>
     </div>
   );
