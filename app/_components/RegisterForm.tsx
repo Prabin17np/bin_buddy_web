@@ -6,6 +6,8 @@ import Link from "next/link";
 import { RegisterData, registerSchema } from "../schema";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { handleRegister } from "@/lib/action/auth-action";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -20,28 +22,37 @@ export default function RegisterForm() {
     mode: "onSubmit",
   });
 
-  const submit = async (values: RegisterData) => {
-    startTransition(async () => {
-      router.push("/login");
-    });
-    console.log("register", values);
+const onSubmit = async (data: RegisterData) => {
+    try {
+      const res = await handleRegister(data);
+      if (!res.success) {
+        throw new Error(res.message || "Registration failed");
+      }
+      toast.success("Registration successful");
+      // handle redirect (optional)
+      startTransition(() => {
+        router.push("/login");
+      });
+    } catch (err: Error | any) {
+      toast.error(err.message);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* Full Name */}
       <div>
         <input
           type="text"
-          {...register("name")}
+          {...register("username")}
           placeholder="Abraham Benjamin Devilliers"
           className="w-full rounded-lg border border-gray-300 px-3 py-3 text-black 
           placeholder:text-gray-500 placeholder:font-medium placeholder:text-base
           focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
         />
-        {errors.name?.message && (
+        {errors.username?.message && (
           <p className="mt-1 text-xs text-red-500">
-            {errors.name.message}
+            {errors.username.message}
           </p>
         )}
       </div>
