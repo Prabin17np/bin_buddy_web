@@ -32,7 +32,7 @@ export default function LoginForm() {
       toast.success("Login success");
 
       startTransition(() => {
-        router.push("/(auth)/dashboard");
+        router.push("/dashboard");
       });
     } catch (error: Error | any) {
       setError(error.message || "Login Failed");
