@@ -2,14 +2,17 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { RegisterData, registerSchema } from "../../schema";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { handleRegister } from "@/lib/action/auth-action";
 
-export default function RegisterForm() {
+interface RegisterFormProps {
+  onOpenLogin?: () => void; // optional
+}
+
+export default function RegisterForm({ onOpenLogin }: RegisterFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -22,110 +25,110 @@ export default function RegisterForm() {
     mode: "onSubmit",
   });
 
-const onSubmit = async (data: RegisterData) => {
+  const onSubmit = async (data: RegisterData) => {
     try {
       const res = await handleRegister(data);
+
       if (!res.success) {
         throw new Error(res.message || "Registration failed");
       }
+
       toast.success("Registration successful");
-      // handle redirect (optional)
+
       startTransition(() => {
-        router.push("/login");
+        router.replace("/login");
       });
-    } catch (err: Error | any) {
+
+    } catch (err: any) {
       toast.error(err.message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Full Name */}
-      <div>
-        <input
-          type="text"
-          {...register("username")}
-          placeholder="Abraham Benjamin Devilliers"
-          className="w-full rounded-lg border border-gray-300 px-3 py-3 text-black 
-          placeholder:text-gray-500 placeholder:font-medium placeholder:text-base
-          focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-        {errors.username?.message && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.username.message}
-          </p>
-        )}
-      </div>
-
-      {/* Email */}
-      <div>
-        <input
-          type="email"
-          {...register("email")}
-          placeholder="abd17@example.com"
-          className="w-full rounded-lg border border-gray-300 px-3 py-3 text-black 
-          placeholder:text-gray-500 placeholder:font-medium placeholder:text-base
-          focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-        {errors.email?.message && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
-
-      {/* Password */}
-      <div>
-        <input
-          type="password"
-          {...register("password")}
-          placeholder="Password"
-          className="w-full rounded-lg border border-gray-300 px-3 py-3 text-black 
-          placeholder:text-gray-500 placeholder:font-medium placeholder:text-base
-          focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-        {errors.password?.message && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.password.message}
-          </p>
-        )}
-      </div>
-
-      {/* Confirm Password */}
-      <div>
-        <input
-          type="password"
-          {...register("confirmPassword")}
-          placeholder="Confirm Password"
-          className="w-full rounded-lg border border-gray-300 px-3 py-3 text-black 
-          placeholder:text-gray-500 placeholder:font-medium placeholder:text-base
-          focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-        {errors.confirmPassword?.message && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.confirmPassword.message}
-          </p>
-        )}
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="w-full rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
-      >
-        {isSubmitting || pending
-          ? "Creating account..."
-          : "Create account"}
-      </button>
-
-      {/* Footer */}
-      <p className="text-center text-sm text-gray-600">
-        Already have an account?{" "}
-        <Link href="/login" className="font-medium text-black hover:underline">
-          Log in
-        </Link>
+    <div className="flex flex-col items-center mx-auto max-w-md p-6 rounded-lg bg-gray-800">
+      <p className="text-center text-3xl font-semibold text-white">
+        Create Account
       </p>
-    </form>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col gap-4 w-full mt-6"
+      >
+        <div className="flex flex-col">
+          <input
+            type="text"
+            placeholder="Full Name"
+            {...register("username")}
+            className="px-5 py-2 bg-gray-700 text-white rounded-2xl outline-none focus:ring-2 focus:ring-[#BE9D68]"
+          />
+          {errors.username && (
+            <span className="text-red-500 text-sm mt-1">
+              {errors.username.message}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <input
+            type="email"
+            placeholder="Email"
+            {...register("email")}
+            className="px-5 py-2 bg-gray-700 text-white rounded-2xl outline-none focus:ring-2 focus:ring-[#BE9D68]"
+          />
+          {errors.email && (
+            <span className="text-red-500 text-sm mt-1">
+              {errors.email.message}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <input
+            type="password"
+            placeholder="Password"
+            {...register("password")}
+            className="px-5 py-2 bg-gray-700 text-white rounded-2xl outline-none focus:ring-2 focus:ring-[#BE9D68]"
+          />
+          {errors.password && (
+            <span className="text-red-500 text-sm mt-1">
+              {errors.password.message}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            {...register("confirmPassword")}
+            className="px-5 py-2 bg-gray-700 text-white rounded-2xl outline-none focus:ring-2 focus:ring-[#BE9D68]"
+          />
+          {errors.confirmPassword && (
+            <span className="text-red-500 text-sm mt-1">
+              {errors.confirmPassword.message}
+            </span>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting || pending}
+          className="bg-[#488563] rounded-3xl py-2 text-white disabled:opacity-60 transition"
+        >
+          {isSubmitting || pending ? "Creating account..." : "Create Account"}
+        </button>
+      </form>
+
+      <div className="mt-6 text-center text-sm text-white">
+        <span>Already have an account? </span>
+        <button
+          type="button"
+          className="text-[#BE9D68] font-semibold"
+          onClick={() => onOpenLogin?.()}
+        >
+          Log In
+        </button>
+      </div>
+    </div>
   );
 }

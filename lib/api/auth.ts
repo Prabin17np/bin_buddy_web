@@ -1,47 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Note: Actual backend API calls
-import axios from "./axios"; // info: axios instance with base URL
+import axios from "axios";
 import { API } from "./endpoint";
 
-export const register = async(registerData: any) => {
-  try {
-    const response = await axios.post(API.AUTH.REGISTER, registerData);
-    return response.data; // response ko body (what backend returns)
-  } catch (error: Error | any) {
-    // info: if 4xx/5xx error, axios throws error
-    throw new Error(
-      error.response?.data?.message // backend error message
-      || error.message // general axios error message
-      || "Registration Failed" // fallback message
-    )
-  }
-}
+// REGISTER
+export const register = async (data: any) => {
+  const response = await axios.post(API.AUTH.REGISTER, data);
+  return response.data;
+};
 
-export const login = async(registerData: any) => {
-  try {
-    const response = await axios.post(API.AUTH.LOGIN, registerData);
-    return response.data; // response ko body (what backend returns)
-  } catch (error: Error | any) {
-    // info: if 4xx/5xx error, axios throws error
-    throw new Error(
-      error.response?.data?.message // backend error message
-      || error.message // general axios error message
-      || "Login Failed" // fallback message
-    )
-  }
-}
+// LOGIN
+export const login = async (data: any) => {
+  const response = await axios.post(API.AUTH.LOGIN, data);
+  return response.data;
+};
 
-export const updateUser = async (userData: any) => {
-  try {
-    const response = await axios.put(API.AUTH.UPDATEPROFILE, userData, {
-      headers: {
-        "Content-Type": "multipart/form-data", // for file upload/multer
-      },
-    });
-    return response.data;
-  } catch (error: Error | any) {
-    throw new Error(
-      error.response?.data?.message || error.message || "Update user failed",
-    );
-  }
+// UPDATE USER (with file upload)
+export const updateUser = async (data: any) => {
+  const response = await axios.put(API.AUTH.UPDATE_PROFILE, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// REQUEST PASSWORD RESET
+export const requestPasswordReset = async (email: string) => {
+  const response = await axios.post(API.AUTH.REQUEST_PASSWORD_RESET, { email });
+  return response.data;
+};
+
+// RESET PASSWORD
+export const resetPassword = async (token: string, newPassword: string) => {
+  const response = await axios.post(`${API.AUTH.RESET_PASSWORD}/${token}`, { newPassword });
+  return response.data;
 };

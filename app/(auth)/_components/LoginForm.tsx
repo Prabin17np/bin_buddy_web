@@ -1,18 +1,24 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { LoginData, loginSchema } from "../../schema";
-import { handleLogin } from "@/lib/action/auth-action";
 import toast from "react-hot-toast";
+import { LoginData, loginSchema } from "../../schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { handleLogin } from "@/lib/action/auth-action";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  onOpenRegister?: () => void;      // optional now
+  onForgotPassword?: () => void;    // optional
+}
+
+export default function LoginForm({
+  onOpenRegister,
+  onForgotPassword,
+}: LoginFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState("");
 
   const {
     register,
@@ -23,55 +29,93 @@ export default function LoginForm() {
   });
 
    const onSubmit = async (data: LoginData) => {
-    try {
-      const res = await handleLogin(data);
-      if (!res.success) {
-        throw new Error(res.message || "Login Failed");
-      }
+  try {
+    const res = await handleLogin(data);
 
-      toast.success("Login success");
-
-      startTransition(() => {
-        router.push("/dashboard");
-      });
-    } catch (error: Error | any) {
-      setError(error.message || "Login Failed");
-      toast.error(error.message);
+    if (!res.success) {
+      throw new Error(res.message || "Login Failed");
     }
-  };
+
+    toast.success("Login success");
+
+    startTransition(() => {
+      if (res.data?.role === "admin") {
+        router.replace("/admin");
+      } else if (res.data?.role === "user") {
+        router.replace("/user/dashboard");
+      } else {
+        router.replace("/");
+      }
+    });
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+};
+
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <input
-        type="email"
-        placeholder="Email"
-        {...register("email")}
-        className="w-full rounded-lg border px-3 py-3 text-black"
-      />
-      {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-
-      <input
-        type="password"
-        placeholder="Password"
-        {...register("password")}
-        className="w-full rounded-lg border px-3 py-3 text-black"
-      />
-      {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
-
-      <button
-        type="submit"
-        disabled={pending || isSubmitting}
-        className="w-full rounded-lg bg-black py-2.5 text-white"
-      >
-        {pending ? "Logging in..." : "Log in"}
-      </button>
-
-      <p className="text-center text-sm text-black">
-        Don't have an account?{" "}
-        <Link href="/register" className="font-medium text-black hover:underline">
-          Sign up
-        </Link>
+    <div className="flex flex-col items-center mx-auto max-w-md p-6 rounded-lg bg-gray-800">
+      <p className="text-center text-3xl font-semibold text-white">
+        Welcome Back
       </p>
-    </form>
+
+      <form
+        className="flex flex-col gap-4 w-full mt-6"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div className="flex flex-col">
+          <input
+            type="email"
+            placeholder="Email"
+            {...register("email")}
+            className="px-5 py-2 bg-gray-700 text-white rounded-2xl outline-none focus:ring-2 focus:ring-[#BE9D68]"
+          />
+          {errors.email && (
+            <span className="text-red-500 text-sm mt-1">{errors.email.message}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <input
+            type="password"
+            placeholder="Password"
+            {...register("password")}
+            className="px-5 py-2 bg-gray-700 text-white rounded-2xl outline-none focus:ring-2 focus:ring-[#BE9D68]"
+          />
+          {errors.password && (
+            <span className="text-red-500 text-sm mt-1">{errors.password.message}</span>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting || pending}
+          className="bg-[#488563] rounded-3xl py-2 text-white disabled:opacity-60 transition"
+        >
+          {isSubmitting || pending ? "Logging in..." : "Log In"}
+        </button>
+      </form>
+
+      <div className="mt-6 text-center text-sm text-white">
+        <span>Don't have an account? </span>
+        <button
+          type="button"
+          className="text-[#BE9D68] font-semibold"
+          onClick={onOpenRegister}
+        >
+          Register
+        </button>
+
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="font-semibold hover:underline"
+          >
+            Forgot Password?
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

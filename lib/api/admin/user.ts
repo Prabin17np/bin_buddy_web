@@ -4,7 +4,7 @@ import axios from "../axios";
 
 export const createUser = async (userData: any) => {
   try {
-    const response = await axios.post(API.ADMIN.USER.CREATE, userData, {
+    const response = await axios.post(API.ADMIN.USERS.CREATE, userData, {
       headers: {
         "Content-Type": "multipart/form-data", // for file upload/multer
       },
