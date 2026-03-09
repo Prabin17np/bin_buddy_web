@@ -1,26 +1,31 @@
-import axios from 'axios';
-import { getAuthToken } from '../cookie';
+import axios from "axios";
+import { getAuthToken } from "../cookie";
 
-const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050').replace(/\/+$/, '');
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!baseURL) throw new Error("NEXT_PUBLIC_API_URL is not defined");
 
 const axiosInstance = axios.create({
-    baseURL: BASE_URL,
-    headers: { 'Content-Type': 'application/json' },
+  baseURL,
+  headers: { "Content-Type": "application/json" },
 });
 
-axiosInstance.interceptors.request.use(
-    async (config) => {
-        const token = await getAuthToken();
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        // Clean URL in case of trailing whitespace/newline
-        if (config.url) {
-            config.url = config.url.trim();
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+axiosInstance.interceptors.request.use(async (config) => {
+  const token = await getAuthToken();
+  if (token && config.headers) config.headers["Authorization"] = `Bearer ${token}`;
+  return config;
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      const { clearAuthCookies } = await import("../cookie");
+      await clearAuthCookies();
+      if (typeof window !== "undefined") window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;

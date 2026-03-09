@@ -1,19 +1,15 @@
 import ResetPasswordForm from "../_components/ResetPasswordForm";
 
 export default async function Page({
-  searchParams,
+    searchParams
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const query = await searchParams;
-  const token = query.token as string | undefined;
-  if (!token) {
-    throw new Error("Invalid or missing token");
-  }
-
-  return (
-    <div>
-      <ResetPasswordForm token={token} />
-    </div>
-  );
+    const query = await searchParams;
+    const token = query.token ? (query.token as string) : '';
+    return (
+        <div>
+            <ResetPasswordForm token={token} />
+        </div>
+    );
 }

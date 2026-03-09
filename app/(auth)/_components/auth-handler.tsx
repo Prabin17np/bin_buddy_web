@@ -3,50 +3,45 @@
 import { useState } from "react";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import Modal from "./modal";
 import ForgetPasswordForm from "./ForgotPasswordForm";
+import Modal from "./modal";
 
 export default function AuthModals() {
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   return (
     <>
-      <button onClick={() => setShowLoginModal(true)}>Login</button>
+      <button onClick={() => setShowLogin(true)}>Login</button>
 
-      <Modal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)}>
+      <Modal isOpen={showLogin} onClose={() => setShowLogin(false)}>
         <LoginForm
           onOpenRegister={() => {
-            setShowLoginModal(false);
-            setShowRegisterModal(true);
+            setShowLogin(false);
+            setShowRegister(true);
           }}
           onForgotPassword={() => {
-            setShowLoginModal(false);
-            setShowForgotPassword(true);
+            setShowLogin(false);
+            setShowForgot(true);
           }}
         />
       </Modal>
 
-      <Modal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-      >
+      <Modal isOpen={showRegister} onClose={() => setShowRegister(false)}>
         <RegisterForm
           onOpenLogin={() => {
-            setShowRegisterModal(false);
-            setShowLoginModal(true);
+            setShowRegister(false);
+            setShowLogin(true);
           }}
         />
       </Modal>
-      <Modal
-        isOpen={showForgotPassword}
-        onClose={() => setShowForgotPassword(false)}
-      >
+
+      <Modal isOpen={showForgot} onClose={() => setShowForgot(false)}>
         <ForgetPasswordForm
           onOpenLogin={() => {
-            setShowForgotPassword(false);
-            setShowLoginModal(true);
+            setShowForgot(false);
+            setShowLogin(true);
           }}
         />
       </Modal>

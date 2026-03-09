@@ -1,123 +1,111 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// note: server side processing
-
 "use server";
 
-import { revalidatePath } from "next/cache";
-import {
-  register,
-  login,
-  updateUser,
-  requestPasswordReset,
-  resetPassword,
-} from "../api/auth";
-import { clearAuthCookies,setAuthToken, setUserData } from "../cookie";
+import { register, login, requestPasswordReset, resetPassword } from "@/lib/api/auth";
+import { setAuthToken, setUserData, clearAuthCookies } from "@/lib/cookie";
+import { jwtDecode } from "jwt-decode";
 
-
-export const handleRegister = async (formData: any) => {
-  try {
-    // info: how data sent from component to backend api
-    const res = await register(formData);
-    // component return logic
-    if(res.success) {
-      return {
-        success: true,
-        data: res.data,
-        message: "Registration successful"
-      };
-    }
-    return {success: false, message: res.message || "Registration failed"};
-  } catch (error: Error | any ) {
-    // console.log("Auth action ko error bitra aayo");
-
-    return {success: false, message: error.message || "Registration failed"};
-  }
+export interface AuthResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  token?: string;
+  role?: string;
 }
 
-export const handleLogin = async (formData: any) => {
+// ─── Register ───────────────────────────────────────────────────────────────
+// POST /api/auth/register
+export const handleRegister = async (data: {
+  username: string;
+  email: string;
+  password: string;
+  name?: string;
+  role?: "user" | "admin"; 
+}): Promise<AuthResponse> => {
   try {
-    // info: how data sent from component to backend api
+    const res = await register({
+      username:data.username,
+      email: data.email,
+      password: data.password,
+        role: data.role,
+    }); 
+
+    if (res.success) {
+      return { success: true, data: res.data, message: "Registration successful" };
+    }
+    return { success: false, message: res.message || "Registration failed" };
+  } catch (error: any) {
+    return { success: false, message: error?.message || "Registration failed" };
+  }
+};
+
+// ─── Login ──────────────────────────────────────────────────────────────────
+// POST /api/auth/login → returns { success, token, data: { user } }
+export const handleLogin = async (formData: {
+  email: string;
+  password: string;
+}): Promise<AuthResponse> => {
+  try {
     const res = await login(formData);
-    // component return logic
-    if(res.success) {
+
+    if (res.success) {
       const token = res.token;
+
+      // Persist token + raw user data in cookies
       await setAuthToken(token);
       await setUserData(res.data);
-      return {
-        success: true,
-        data: res.data,
-        message: "Login successful"
-      };
-    }
-    return {success: false, message: res.message || "Login failed"};
-  } catch (error: Error | any ) {
-    return {success: false, message: error.message || "Login failed"};
-  }
-}
 
-export const handleUpdateUser = async (data: FormData) => {
-  try {
-    const response = await updateUser(data);
-    if (response.success) {
-      revalidatePath("/user/profile");
+      // Decode role from JWT (avoids extra /me round-trip)
+      const decoded: any = jwtDecode(token);
+
       return {
         success: true,
-        message: "Update successful",
-        data: response.data,
+        token,
+        role: decoded.role ?? "user",
+        data: {
+          ...res.data,
+          role: decoded.role ?? "user",
+        },
+        message: "Login successful",
       };
     }
-    return {
-      success: false,
-      message: response.message || "Update failed",
-    };
-  } catch (error: Error | any) {
-    return {
-      success: false,
-      message: error.message || "Update action failed",
-    };
-  }
-};
-export const handleRequestPasswordReset = async (email: string) => {
-  try {
-    const response = await requestPasswordReset(email);
-    if (response.success) {
-      return {
-        success: true,
-        message: "Password reset email sent successfully",
-      };
-    }
-    return {
-      success: false,
-      message: response.message || "Request password reset failed",
-    };
-  } catch (error: Error | any) {
-    return {
-      success: false,
-      message: error.message || "Request password reset action failed",
-    };
+
+    return { success: false, message: res.message || "Login failed" };
+  } catch (error: any) {
+    return { success: false, message: error?.message || "Login failed" };
   }
 };
 
+// ─── Request Password Reset ──────────────────────────────────────────────────
+// POST /api/auth/request-password-reset  { email }
+export const handleRequestPasswordReset = async (email: string): Promise<AuthResponse> => {
+  try {
+    const res = await requestPasswordReset(email);
+    return res.success
+      ? { success: true, message: "Password reset email sent successfully" }
+      : { success: false, message: res.message || "Failed to send reset email" };
+  } catch (error: any) {
+    return { success: false, message: error?.message || "Request password reset failed" };
+  }
+};
+
+// ─── Reset Password ──────────────────────────────────────────────────────────
+// POST /api/auth/reset-password/:token  { newPassword }
 export const handleResetPassword = async (
   token: string,
-  newPassword: string,
-) => {
+  newPassword: string
+): Promise<AuthResponse> => {
   try {
-    const response = await resetPassword(token, newPassword);
-    if (response.success) {
-      return {
-        success: true,
-        message: "Password has been reset successfully",
-      };
-    }
-    return {
-      success: false,
-      message: response.message || "Reset password failed",
-    };
-  } catch (error: Error | any) {
-    return {
-      success: false,
-      message: error.message || "Reset password action failed",
-    };
+    const res = await resetPassword(token, newPassword);
+    return res.success
+      ? { success: true, message: "Password has been reset successfully" }
+      : { success: false, message: res.message || "Password reset failed" };
+  } catch (error: any) {
+    return { success: false, message: error?.message || "Reset password action failed" };
   }
+};
+
+// ─── Logout ──────────────────────────────────────────────────────────────────
+export const handleLogout = async (): Promise<void> => {
+  await clearAuthCookies();
 };

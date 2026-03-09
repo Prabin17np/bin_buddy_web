@@ -1,96 +1,159 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
+import Image from "next/image";
 import { useForm } from "react-hook-form";
-import { resetPasswordSchema, ResetPasswordData } from "../../schema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
+import { ResetPasswordData, resetPasswordSchema } from "../../schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { handleResetPassword } from "@/lib/action/auth-action";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import Link from "next/link";
-const ResetPasswordForm = ({ token }: { token: string }) => {
+
+interface ResetPasswordFormProps {
+  token: string;
+}
+
+export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
   const {
     register,
     handleSubmit,
+    watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordData>({
-    mode: "onSubmit",
     resolver: zodResolver(resetPasswordSchema),
   });
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setTransition] = useTransition();
-  const submit = (values: ResetPasswordData) => {
-    setError(null);
-    setTransition(async () => {
+
+  // Password strength
+  const password = watch("newPassword") || "";
+  const strength = [
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+    password.length > 6,
+  ].filter(Boolean).length;
+  const strengthColors = ["bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
+  const strengthLabels = ["Weak", "Fair", "Good", "Strong"];
+
+  const onSubmit = async (data: ResetPasswordData) => {
+    setError("");
+    startTransition(async () => {
       try {
-        const result = await handleResetPassword(token, values.newPassword);
-        if (result.success) {
-          toast.success("Password has been reset successfully.");
-          return router.push("/");
-        } else {
-          throw new Error(result.message || "Failed to reset password");
-        }
+        const res = await handleResetPassword(token, data.newPassword);
+        if (!res.success) throw new Error(res.message || "Reset failed");
+
+        toast.success("Password reset successfully 🌿");
+        reset();
+        router.replace("/login");
       } catch (err: Error | any) {
-        toast.error(err.message || "Failed to reset password");
+        const message = err.message || "Something went wrong";
+        setError(message);
+        toast.error(message);
       }
     });
   };
+
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="password">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="new-password"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-          {...register("newPassword")}
-          placeholder="••••••"
-        />
-        {errors.newPassword?.message && (
-          <p className="text-xs text-red-600">{errors.newPassword.message}</p>
-        )}
+    <div className="bg-white/90 backdrop-blur-md shadow-xl rounded-3xl p-8 border border-green-100 w-full max-w-md mx-auto">
+
+      {/* Logo + Heading */}
+      <div className="flex flex-col items-center mb-8 gap-2">
+        <Image src="/assets/icons/logo.png" height={80} width={80}unoptimized alt="logo" />
+        <h1 className="text-3xl font-serif font-bold text-[#2F7330]">Reset Password</h1>
+        <p className="text-gray-500 text-sm">Choose a strong new password 🔒</p>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="confirmPassword">
-          Confirm password
-        </label>
-        <input
-          id="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-          {...register("confirmNewPassword")}
-          placeholder="••••••"
-        />
-        {errors.confirmNewPassword?.message && (
-          <p className="text-xs text-red-600">
-            {errors.confirmNewPassword.message}
-          </p>
-        )}
-      </div>
+      {/* Error */}
+      {error && (
+        <p className="text-red-500 text-sm text-center mb-4 bg-red-50 rounded-xl py-2 px-3">
+          {error}
+        </p>
+      )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="h-10 w-full rounded-md bg-foreground text-background text-sm font-semibold hover:opacity-90 disabled:opacity-60"
-      >
-        {isSubmitting || pending ? "Resetting password..." : "Reset password"}
-      </button>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-      <div className="mt-1 text-center text-sm">
-        Want to log in?{" "}
-        <Link href="/login" className="font-semibold hover:underline">
-          Log in
-        </Link>
-      </div>
-    </form>
+        {/* New Password */}
+        <div className="flex flex-col gap-1">
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="New Password"
+              {...register("newPassword")}
+              className="w-full bg-transparent border-b-2 border-green-300 focus:outline-none focus:border-[#1F5E24] transition-all duration-300 py-2 pr-14"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-2 text-sm text-[#1F5E24] font-medium"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+          {errors.newPassword && (
+            <span className="text-red-500 text-xs">{errors.newPassword.message}</span>
+          )}
+
+          {/* Strength bar */}
+          {password.length > 0 && (
+            <div className="mt-1 space-y-1">
+              <div className="h-1.5 rounded-full overflow-hidden bg-slate-200">
+                <div
+                  className={`${strengthColors[strength - 1] || "bg-red-400"} h-1.5 transition-all duration-300`}
+                  style={{ width: `${(strength / 4) * 100}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-400">
+                Strength:{" "}
+                <span className="font-medium text-gray-600">
+                  {strengthLabels[strength - 1] || "Too weak"}
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Confirm Password */}
+        <div className="flex flex-col gap-1">
+          <input
+            type="password"
+            placeholder="Confirm New Password"
+            {...register("confirmNewPassword")}
+            className="w-full bg-transparent border-b-2 border-green-300 focus:outline-none focus:border-[#1F5E24] transition-all duration-300 py-2"
+          />
+          {errors.confirmNewPassword && (
+            <span className="text-red-500 text-xs">{errors.confirmNewPassword.message}</span>
+          )}
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isSubmitting || pending}
+          className="w-full bg-[#1F5E24] text-white py-3 rounded-full hover:bg-[#17491c] transition-all duration-300 shadow-md hover:shadow-lg font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isSubmitting || pending ? "Resetting..." : "Reset Password"}
+        </button>
+
+      </form>
+
+      {/* Back to login */}
+      <p className="text-center text-sm text-gray-600 mt-6">
+        Remember your password?{" "}
+        <button
+          type="button"
+          onClick={() => router.push("/login")}
+          className="text-[#1F5E24] font-semibold hover:underline"
+        >
+          Back to Login
+        </button>
+      </p>
+
+    </div>
   );
-};
-
-export default ResetPasswordForm;
+}

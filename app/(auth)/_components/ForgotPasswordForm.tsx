@@ -1,84 +1,99 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState, useTransition } from "react";
+
+import Image from "next/image";
 import { useForm } from "react-hook-form";
-import { forgetPasswordSchema, ForgetPasswordData } from "../../schema";
+import toast from "react-hot-toast";
+import { ForgetPasswordData, forgetPasswordSchema } from "../../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { handleRequestPasswordReset } from "@/lib/action/auth-action";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { useState, useTransition } from "react";
 
+// 
 interface ForgotPasswordFormProps {
   onOpenLogin: () => void;
 }
 
-const ForgetPasswordForm = ({ onOpenLogin }: ForgotPasswordFormProps) => {
-  const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ForgetPasswordData>({
-    mode: "onSubmit",
+export default function ForgotPasswordForm({ onOpenLogin }: ForgotPasswordFormProps) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ForgetPasswordData>({
     resolver: zodResolver(forgetPasswordSchema),
   });
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setTransition] = useTransition();
-  const submit = (values: ForgetPasswordData) => {
-    setError(null);
-    setTransition(async () => {
+
+  const onSubmit = async (data: ForgetPasswordData) => {
+    setError("");
+    startTransition(async () => {
       try {
-        const result = await handleRequestPasswordReset(values.email);
-        if (result.success) {
-          toast.success(
-            "If the email is registered, a reset link has been sent.",
-          );
-          return router.push("/");
-        } else {
-          throw new Error(result.message || "Failed to send reset link");
-        }
+        const res = await handleRequestPasswordReset(data.email);
+        if (!res.success) throw new Error(res.message || "Request failed");
+
+        toast.success("Reset link sent! Check your inbox 📬");
+        reset();
+        setSent(true);
       } catch (err: Error | any) {
-        toast.error(err.message || "Failed to send reset link");
+        const message = err.message || "Something went wrong";
+        setError(message);
+        toast.error(message);
       }
     });
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-          {...register("email")}
-          placeholder="you@example.com"
-        />
-        {errors.email?.message && (
-          <p className="text-xs text-red-600">{errors.email.message}</p>
-        )}
+    <div className="bg-white/90 backdrop-blur-md shadow-xl rounded-3xl p-8 border border-green-100 w-full max-w-md mx-auto">
+      <div className="flex flex-col items-center mb-8 gap-2">
+        <Image src="/assets/icons/logo.png" height={80} width={80}unoptimized alt="logo" />
+        <h1 className="text-3xl font-serif font-bold text-[#2F7330]">Forgot Password</h1>
+        <p className="text-gray-500 text-sm text-center">
+          Enter your email and we&apos;ll send you a reset link 📧
+        </p>
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="h-10 w-full rounded-md bg-foreground text-background text-sm font-semibold hover:opacity-90 disabled:opacity-60"
-      >
-        {isSubmitting || pending ? "Sending..." : "Send Link"}
-      </button>
+      {sent ? (
+        <div className="text-center space-y-4">
+          <div className="bg-green-50 border border-green-200 rounded-2xl py-6 px-4">
+            <p className="text-3xl mb-2">📬</p>
+            <p className="text-[#1F5E24] font-semibold">Reset link sent!</p>
+            <p className="text-gray-500 text-sm mt-1">Check your inbox and follow the instructions.</p>
+          </div>
+          {/* Use prop instead of router.push */}
+          <button type="button" onClick={onOpenLogin}
+            className="w-full bg-[#1F5E24] text-white py-3 rounded-full hover:bg-[#17491c] transition-all duration-300 shadow-md font-semibold">
+            Back to Login
+          </button>
+        </div>
+      ) : (
+        <>
+          {error && (
+            <p className="text-red-500 text-sm text-center mb-4 bg-red-50 rounded-xl py-2 px-3">{error}</p>
+          )}
 
-      <div className="mt-1 text-center text-sm">
-        Already have an account?{" "}
-        <button onClick={onOpenLogin} className="font-semibold hover:underline">
-          Log in
-        </button>
-      </div>
-    </form>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="flex flex-col gap-1">
+              <input type="email" placeholder="Email" {...register("email")}
+                className="w-full bg-transparent border-b-2 border-green-300 focus:outline-none focus:border-[#1F5E24] transition-all duration-300 py-2"
+              />
+              {errors.email && <span className="text-red-500 text-xs">{errors.email.message}</span>}
+            </div>
+
+            <button type="submit" disabled={isSubmitting || pending}
+              className="w-full bg-[#1F5E24] text-white py-3 rounded-full hover:bg-[#17491c] transition-all duration-300 shadow-md hover:shadow-lg font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
+              {isSubmitting || pending ? "Sending..." : "Send Reset Link"}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-600 mt-6">
+            Remember your password?{" "}
+            {/*  Use prop instead of router.push */}
+            <button type="button" onClick={onOpenLogin}
+              className="text-[#1F5E24] font-semibold hover:underline">
+              Back to Login
+            </button>
+          </p>
+        </>
+      )}
+    </div>
   );
-};
-
-export default ForgetPasswordForm;
+} 

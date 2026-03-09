@@ -1,16 +1,8 @@
 "use client";
-
+import ForgotPasswordForm from "../_components/ForgotPasswordForm";
 import { useRouter } from "next/navigation";
-import ForgetPasswordForm from "../_components/ForgotPasswordForm";
 
 export default function Page() {
   const router = useRouter();
-
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-900">
-      <ForgetPasswordForm
-        onOpenLogin={() => router.push("/login")} 
-      />
-    </div>
-  );
+  return <ForgotPasswordForm onOpenLogin={() => router.push("/login")} />;
 }
